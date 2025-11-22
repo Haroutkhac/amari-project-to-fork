@@ -1,6 +1,32 @@
 import PyPDF2
 import os
-from typing import Optional, List
+import base64
+import io
+from typing import Optional, List, Tuple
+
+def pdf_to_images_base64(file_path: str) -> List[str]:
+    try:
+        from pdf2image import convert_from_path
+        
+        images = convert_from_path(file_path, dpi=150)
+        base64_images = []
+        
+        for i, image in enumerate(images):
+            print(f"DEBUG: Converting page {i+1}/{len(images)} to base64")
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            base64_images.append(img_base64)
+        
+        print(f"DEBUG: Converted {len(base64_images)} pages to base64")
+        return base64_images
+        
+    except ImportError as e:
+        print(f"ERROR: pdf2image not installed: {str(e)}")
+        return []
+    except Exception as e:
+        print(f"ERROR: Failed to convert PDF to images: {str(e)}")
+        return []
 
 def extract_text_from_pdf(file_path: str) -> str:
     """

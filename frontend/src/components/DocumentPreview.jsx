@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import XLSXViewer from './XLSXViewer';
 
 const DocumentPreview = ({ files }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -41,9 +42,13 @@ const DocumentPreview = ({ files }) => {
         {selectedFile && fileUrl && (
           selectedFile.type === 'application/pdf' ? (
             <iframe src={fileUrl} className="w-full h-full" title="Document Preview" />
+          ) : selectedFile.name.endsWith('.xlsx') || selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? (
+            <div className="w-full h-full overflow-auto p-4">
+              <XLSXViewer file={selectedFile} />
+            </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
-              <p>Preview not available for this file type. <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Download to view</a></p>
+              <p>Preview not available for this file type.</p>
             </div>
           )
         )}

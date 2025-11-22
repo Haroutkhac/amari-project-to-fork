@@ -5,7 +5,28 @@ import json
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Define the JSON schema for structured output
+def format_extracted_data(data):
+    if not data or "error" in data:
+        return data
+    
+    formatted = data.copy()
+    
+    if formatted.get("average_price") is not None:
+        try:
+            price = float(formatted["average_price"])
+            formatted["average_price"] = f"${price:.2f}"
+        except (ValueError, TypeError):
+            pass
+    
+    if formatted.get("average_gross_weight") is not None:
+        try:
+            weight = float(formatted["average_gross_weight"])
+            formatted["average_gross_weight"] = f"{weight:.2f} kg"
+        except (ValueError, TypeError):
+            pass
+    
+    return formatted
+
 EXTRACTION_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
@@ -44,11 +65,11 @@ EXTRACTION_SCHEMA = {
                 },
                 "average_gross_weight": {
                     "type": ["number", "null"],
-                    "description": "The average gross weight across all items"
+                    "description": "The average gross weight across all items in kilograms"
                 },
                 "average_price": {
                     "type": ["number", "null"],
-                    "description": "The average price across all items"
+                    "description": "The average price across all items in USD"
                 }
             },
             "required": [
@@ -67,17 +88,62 @@ EXTRACTION_SCHEMA = {
     }
 }
 
-def extract_field_from_document(document_data):
-    """
-    Use LLM to extract specific field from document text.
+def extract_from_images(pdf_images):
+    if not pdf_images:
+        return None
     
-    Args:
-        document_data: Dictionary containing text from documents (pdf_text, xlsx_text)
+    print(f"DEBUG: Extracting from {len(pdf_images)} images using Vision API")
+    
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that extracts structured data from document images."},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": """Extract the following fields from the provided document images:
+
+    - Bill of lading number (may appear as "Bill of lading NO" in the document)
+    - Container Number
+    - Consignee Name
+    - Consignee Address
+    - Date of export (format as YYYY-MM-DD)
+    - Date (format as YYYY-MM-DD)
+    - Line Items Count (as an integer)
+    - Average Gross Weight (as a number in kilograms, extract numeric value only)
+    - Average Price (as a number in USD, extract numeric value only)
+
+    If a field cannot be found, set it to null."""
+                }
+            ]
+        }
+    ]
+    
+    for img_base64 in pdf_images:
+        messages[1]["content"].append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/png;base64,{img_base64}"
+            }
+        })
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-5-mini",
+            messages=messages,
+            response_format=EXTRACTION_SCHEMA,
+        )
         
-    Returns:
-        dict: Extracted field values
-    """
-    
+        extracted_data = json.loads(response.choices[0].message.content)
+        print(f"DEBUG: Vision API extracted data: {extracted_data}")
+        formatted_data = format_extracted_data(extracted_data)
+        return formatted_data
+        
+    except Exception as e:
+        print(f"DEBUG: Vision API Error: {str(e)}")
+        return {"error": str(e)}
+
+def extract_field_from_document(document_data):
     print(f"DEBUG: Received document_data: {document_data}")
     print(f"DEBUG: document_data keys: {document_data.keys() if document_data else 'None'}")
     
@@ -107,8 +173,8 @@ def extract_field_from_document(document_data):
     - Date of export (format as YYYY-MM-DD)
     - Date (format as YYYY-MM-DD)
     - Line Items Count (as an integer)
-    - Average Gross Weight (as a number)
-    - Average Price (as a number)
+    - Average Gross Weight (as a number in kilograms, extract numeric value only)
+    - Average Price (as a number in USD, extract numeric value only)
 
     If a field cannot be found, set it to null.
 
@@ -118,7 +184,6 @@ def extract_field_from_document(document_data):
 
     try:
         response = client.chat.completions.create(
-            # NEVER CHANGE THIS MODEL
             model="gpt-5-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that extracts structured data from documents."},
@@ -127,11 +192,18 @@ def extract_field_from_document(document_data):
             response_format=EXTRACTION_SCHEMA,
         )
         
-        # Parse the JSON response
         extracted_data = json.loads(response.choices[0].message.content)
-        print(f"DEBUG: Extracted structured data: {extracted_data}")
+        print(f"DEBUG: Text-based extracted data: {extracted_data}")
         
-        return extracted_data
+        formatted_text_data = format_extracted_data(extracted_data)
+        result = {"text_extraction": formatted_text_data}
+        
+        if 'pdf_images' in document_data:
+            vision_data = extract_from_images(document_data['pdf_images'])
+            if vision_data:
+                result["vision_extraction"] = vision_data
+        
+        return result
         
     except json.JSONDecodeError as e:
         print(f"DEBUG: JSON Parse Error: {str(e)}")

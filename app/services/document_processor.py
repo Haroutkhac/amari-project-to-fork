@@ -1,16 +1,7 @@
 import os
-from app.utils.pdf_utils import extract_text_from_pdf
+from app.utils.pdf_utils import extract_text_from_pdf, pdf_to_images_base64
 
 def process_documents(file_paths):
-    """
-    Process different types of documents and extract relevant information.
-    
-    Args:
-        file_paths: List of paths to the documents
-        
-    Returns:
-        dict: Extracted data from documents
-    """
     print(f"DEBUG: Processing {len(file_paths)} files")
     extracted_data = {}
     
@@ -23,6 +14,11 @@ def process_documents(file_paths):
             pdf_text = extract_text_from_pdf(file_path)
             print(f"DEBUG: Extracted PDF text length: {len(pdf_text)}")
             extracted_data['pdf_text'] = extracted_data.get('pdf_text', "") + "\n" + pdf_text
+            
+            pdf_images = pdf_to_images_base64(file_path)
+            if pdf_images:
+                extracted_data['pdf_images'] = pdf_images
+                print(f"DEBUG: Converted PDF to {len(pdf_images)} images")
         elif file_path.endswith(".xlsx"):
             print(f"DEBUG: Processing as XLSX")
             import pandas as pd

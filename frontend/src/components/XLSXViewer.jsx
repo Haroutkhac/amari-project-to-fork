@@ -48,7 +48,7 @@ const XLSXViewer = ({ file }) => {
   }
 
   return (
-    <div className="mt-4 overflow-auto max-h-96 border rounded">
+    <div className="overflow-auto border rounded">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>

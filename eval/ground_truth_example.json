@@ -1,0 +1,31 @@
+{
+  "doc_001": {
+    "filename": "sample_bill_of_lading.pdf",
+    "fields": {
+      "Bill of lading number": "COSU534343282",
+      "Container Number": "COSU5343432",
+      "Consignee Name": "ABC Trading Company",
+      "Consignee Address": "123 Main Street, Los Angeles, CA 90001",
+      "Date of export": "2024-01-15",
+      "Date": "2024-01-15",
+      "Line Items Count": "5",
+      "Average Gross Weight": "12500.00",
+      "Average Price": "45000.00"
+    }
+  },
+  "doc_002": {
+    "filename": "sample_invoice.xlsx",
+    "fields": {
+      "Bill of lading number": "",
+      "Container Number": "",
+      "Consignee Name": "XYZ Corporation",
+      "Consignee Address": "456 Oak Avenue, New York, NY 10001",
+      "Date of export": "",
+      "Date": "2024-02-20",
+      "Line Items Count": "8",
+      "Average Gross Weight": "8500.50",
+      "Average Price": "32000.00"
+    }
+  }
+}
+

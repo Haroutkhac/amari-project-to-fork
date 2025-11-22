@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import XLSXViewer from './XLSXViewer';
+import { API_BASE_URL } from '../config';
 
 const FileUpload = ({ onUploadSuccess }) => {
   const [files, setFiles] = useState([]);
@@ -23,7 +23,7 @@ const FileUpload = ({ onUploadSuccess }) => {
     });
 
     try {
-      const response = await axios.post('http://localhost:8000/process-documents', formData, {
+      const response = await axios.post(`${API_BASE_URL}/process-documents`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -46,26 +46,6 @@ const FileUpload = ({ onUploadSuccess }) => {
         onChange={handleFileChange}
         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
-      
-      {files.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Files ({files.length}):</h3>
-          <ul className="bg-gray-50 rounded border border-gray-200 divide-y divide-gray-200">
-            {files.map((file, index) => (
-              <li key={index} className="px-3 py-2 text-sm text-gray-600 flex items-center" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                <span className="truncate">{file.name}</span>
-                <span className="ml-auto text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {/* XLSX preview */}
-      {files
-        .filter((file) => file.name.endsWith('.xlsx'))
-        .map((file) => (
-          <XLSXViewer key={file.name} file={file} />
-        ))}
       <button
         onClick={handleUpload}
         disabled={uploading || files.length === 0}

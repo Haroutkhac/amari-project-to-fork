@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import ExtractionForm from './components/ExtractionForm';
 import DocumentPreview from './components/DocumentPreview';
-import HealthCheck from './components/HealthCheck';
 
 function App() {
   const [extractedData, setExtractedData] = useState(null);
@@ -22,7 +21,6 @@ function App() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-200px)]">
         <div className="lg:col-span-1 flex flex-col space-y-8">
-          <HealthCheck />
           <FileUpload onUploadSuccess={handleUploadSuccess} />
           {extractedData && <ExtractionForm data={extractedData} />}
         </div>
